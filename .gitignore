@@ -1,2 +1,4 @@
 *.sw*
 .direnv/
+.terraform/
+config.tf.json

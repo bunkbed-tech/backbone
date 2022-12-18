@@ -49,6 +49,7 @@
         packages = with pkgs; [
           gitleaks
           go
+          google-cloud-sdk
           kubectl
           kubernetes-helm
           nixpkgs-fmt
