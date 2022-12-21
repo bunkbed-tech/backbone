@@ -43,6 +43,11 @@ in
   resource.google_container_cluster.${project} = {
     name = "${project}-cluster";
     enable_autopilot = true;
+    # We use a workaround for a bug in the provider in order to configure an Autopilot cluster correctly.
+    # See the open issue at: https://github.com/hashicorp/terraform-provider-google/issues/10782
+    ip_allocation_policy = {};
+    # Autopilot clusters must be regional
+    location = config.provider.google.region;
     network = config.resource.google_compute_network.vpc.name;
     subnetwork = config.resource.google_compute_subnetwork.${project}.name;
   };
