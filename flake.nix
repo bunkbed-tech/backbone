@@ -31,6 +31,7 @@
             result="config.tf.json"
             [[ -e $result ]] && rm -f $result
             cp ${config} $result
+            export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/keys/application_default_credentials.json
             terraform init
             terraform ${command}
           '');

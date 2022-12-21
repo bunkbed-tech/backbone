@@ -2,3 +2,4 @@
 .direnv/
 .terraform/
 config.tf.json
+keys/
