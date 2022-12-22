@@ -15,7 +15,7 @@
     , terranix
     }: flake-utils.lib.eachDefaultSystem (system:
     let
-      project = "mattermost";
+      project = "backbone";
       pkgs = import nixpkgs {
         inherit system;
         overlays = [ devshell.overlay ];
@@ -50,7 +50,9 @@
         packages = with pkgs; [
           gitleaks
           go
-          google-cloud-sdk
+          # Need this extra component in order for kubectl to communicate with GKE cluster
+          # For more details, see issue at: https://github.com/NixOS/nixpkgs/issues/99280#issuecomment-1227334798
+          (google-cloud-sdk.withExtraComponents ([ google-cloud-sdk.components.gke-gcloud-auth-plugin ]))
           kubectl
           kubernetes-helm
           nixpkgs-fmt
