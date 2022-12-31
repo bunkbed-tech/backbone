@@ -12,9 +12,9 @@ in
     amount.specified_amount = { currency_code = "USD"; units = "74"; };
     threshold_rules = [
       { threshold_percent = "1.0"; }
-      { threshold_percent = "1.0"; spend_basis = "FORECASTED_SPEND"; }
       { threshold_percent = "0.5"; }
       { threshold_percent = "0.85"; }
+      { threshold_percent = "1.0"; spend_basis = "FORECASTED_SPEND"; }
     ];
     all_updates_rule = {
       monitoring_notification_channels = [ "\${ google_monitoring_notification_channel.email.id }" ];
