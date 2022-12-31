@@ -20,7 +20,8 @@ let
     name = "google-cloud-key";
     secret.secret_name = "\${ kubernetes_secret.${service}.metadata[0].name }";
     mount_path = "/var/secrets/google";
-    file = "${mount_path}/key.json";
+    file_name = "key.json";
+    file_path = "${mount_path}/${file_name}";
   };
 in
 rec {
@@ -57,7 +58,7 @@ rec {
   };
   resource.kubernetes_secret.${service} = {
     metadata = { name = "${service}-key"; namespace = "kube-system"; };
-    data = "\${ jsondecode(base64decode(google_service_account_key.main.private_key)) }";
+    binary_data = { ${volume-google.file_name} = "\${ google_service_account_key.main.private_key }"; };
   };
   resource.google_compute_address = listToAttrsWithKeyFunc { valueFunc = makeAddress; } (range 1 address_count);
   resource.kubernetes_config_map.${service} = {
@@ -92,31 +93,31 @@ rec {
     role_ref = { api_group = "rbac.authorization.k8s.io"; kind = "ClusterRole"; name = metadata.name; };
     subject = [{ kind = "ServiceAccount"; name = metadata.name; namespace = "kube-system"; }];
   };
-# resource.kubernetes_deployment.${service} = {
-#   metadata = { name = service; namespace = "kube-system"; };
-#   spec = {
-#     replicas = 1;
-#     selector.match_labels.app = service;
-#     template = {
-#       metadata.labels.app = service;
-#       spec = rec {
-#         node_selector."cloud.google.com/gke-nodepool" = web-pool;
-#         container = [
-#           (rec {
-#             name = service;
-#             image = "doitintl/${service}:latest";
-#             image_pull_policy = "Always";
-#             volume_mount = [{ inherit (volume-google) name mount_path; }];
-#             env = (makeEnvs resource.kubernetes_config_map.${service}) ++ [
-#               { name = "GOOGLE_APPLICATION_CREDENTIALS"; value = volume-google.file; }
-#             ];
-#           })
-#         ];
-#         restart_policy = "Always";
-#         service_account_name = resource.kubernetes_service_account.${service}.metadata.name;
-#         volume = [ { inherit (volume-google) name secret; } ];
-#       };
-#     };
-#   };
-# };
+  resource.kubernetes_deployment.${service} = {
+    metadata = { name = service; namespace = "kube-system"; };
+    spec = {
+      replicas = 1;
+      selector.match_labels.app = service;
+      template = {
+        metadata.labels.app = service;
+        spec = rec {
+          node_selector."cloud.google.com/gke-nodepool" = web-pool;
+          container = [
+            (rec {
+              name = service;
+              image = "doitintl/${service}:latest";
+              image_pull_policy = "Always";
+              volume_mount = [{ inherit (volume-google) name mount_path; }];
+              env = (makeEnvs resource.kubernetes_config_map.${service}) ++ [
+                { name = "GOOGLE_APPLICATION_CREDENTIALS"; value = volume-google.file_path; }
+              ];
+            })
+          ];
+          restart_policy = "Always";
+          service_account_name = resource.kubernetes_service_account.${service}.metadata.name;
+          volume = [ { inherit (volume-google) name secret; } ];
+        };
+      };
+    };
+  };
 }
