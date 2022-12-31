@@ -1,5 +1,5 @@
 *.sw*
 .direnv/
 .terraform/
-config.tf.json
-keys/
+*.tf.json
+*.tfvars

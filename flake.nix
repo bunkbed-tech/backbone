@@ -1,9 +1,9 @@
 {
-  description = "schraderz mattermost deployment";
+  description = "bunkbed backbone infrastructure";
   inputs = {
     devshell.url = "github:numtide/devshell";
     flake-utils.url = "github:numtide/flake-utils";
-    nixpkgs.url = "github:nixos/nixpkgs";
+    nixpkgs.url = "github:nixos/nixpkgs/release-22.11";
     terranix.url = "github:terranix/terranix";
     terranix.inputs.nixpkgs.follows = "nixpkgs";
   };
@@ -15,23 +15,21 @@
     , terranix
     }: flake-utils.lib.eachDefaultSystem (system:
     let
+      pkgs = import nixpkgs { inherit system; overlays = [ devshell.overlay ]; };
+      inherit (builtins) toString;
+      inherit (pkgs.devshell) mkShell;
+      inherit (pkgs.lib) genAttrs;
+      inherit (pkgs.writers) writeBash;
+      inherit (terranix.lib) terranixConfiguration;
       project = "backbone";
-      pkgs = import nixpkgs {
-        inherit system;
-        overlays = [ devshell.overlay ];
-      };
       tf = rec {
-        config = terranix.lib.terranixConfiguration {
-          inherit system;
-          modules = [ ./infra/config.nix ];
-        };
+        config = terranixConfiguration { inherit system; modules = [ ./infra ]; };
         commandToApp = command: {
           type = "app";
-          program = toString (pkgs.writers.writeBash "${command}" ''
-            result="config.tf.json"
+          program = toString (writeBash "${command}" ''
+            result="infra.tf.json"
             [[ -e $result ]] && rm -f $result
             cp ${config} $result
-            export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/keys/application_default_credentials.json
             terraform init
             terraform ${command}
           '');
@@ -42,12 +40,13 @@
       packages.tf = tf.config;
       packages.default = packages.tf;
 
-      apps = pkgs.lib.genAttrs [ "apply" "plan" "destroy" ] tf.commandToApp;
+      apps = genAttrs [ "apply" "plan" "destroy" ] tf.commandToApp;
 
-      devShell = pkgs.devshell.mkShell {
+      devShell = mkShell {
         name = "${project}-shell";
         commands = [{ package = "devshell.cli"; }];
         packages = with pkgs; [
+          cmctl
           gitleaks
           go
           # Need this extra component in order for kubectl to communicate with GKE cluster
