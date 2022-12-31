@@ -56,12 +56,12 @@ let
       ips = map makeIp (attrNames kubeip.resource.google_compute_address);
       funcs = { inherit (lib.lists) concatMap; };
     };
-    #   webserver = import ./webserver.nix {
-    #     inherit domain;
-    #     webserver.tls.issuer = cert-manager.resource.kubernetes_manifest.issuer.manifest.metadata.name;
-    #     static-ip-name = vpc.resource.google_compute_global_address.base.name;
-    #     cert-manager.namespace = cert-manager.resource.helm_release.cert-manager.namespace;
-    #   };
+    webserver = import ./webserver.nix {
+      #inherit domain;
+      #webserver.tls.issuer = cert-manager.resource.kubernetes_manifest.issuer.manifest.metadata.name;
+      #static-ip-name = vpc.resource.google_compute_global_address.base.name;
+      #cert-manager.namespace = cert-manager.resource.helm_release.cert-manager.namespace;
+    };
     #   nginx = import ./nginx.nix {
     #     inherit domain;
     #     webserver = {
