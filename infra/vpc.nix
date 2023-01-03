@@ -16,7 +16,7 @@ rec {
   resource.google_compute_firewall.vpc = {
     name = "vpc-firewall";
     network = resource.google_compute_network.vpc.name;
-    source_ranges = [ resource.google_compute_subnetwork.${project}.ip_cidr_range ];
+    source_ranges = [ "0.0.0.0/0" ];
     allow = [{ protocol = "tcp"; ports = [ 80 443 ]; }];
   };
 }
