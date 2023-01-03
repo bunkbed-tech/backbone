@@ -7,6 +7,7 @@ rec {
     name = "${project}-cluster";
     remove_default_node_pool = true;
     initial_node_count = 1;
+    addons_config.http_load_balancing.disabled = true;
   };
   resource.google_container_node_pool.ingress-pool = {
     name = "ingress-pool";
