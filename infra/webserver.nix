@@ -1,11 +1,14 @@
-{ }:
-let service = "webserver";
+{}:
+let
+  service = "webserver";
+  port = 8080;
 in
 rec {
   resource.kubernetes_deployment.${service} = rec {
     metadata = rec {
       name = service;
       labels = { app = name; };
+      namespace = "default";
     };
     spec = {
       replicas = 1;
@@ -16,7 +19,7 @@ rec {
           {
             name = "hello-app";
             image = "gcr.io/google-samples/hello-app:1.0";
-            port = [{ container_port = 8080; }];
+            port = [{ container_port = port; }];
           }
         ];
       };
@@ -26,7 +29,7 @@ rec {
     inherit (resource.kubernetes_deployment.${service}) metadata;
     spec = {
       type = "ClusterIP";
-      port = [{ port = 8080; }];
+      port = [{ inherit port; }];
       selector = metadata.labels;
     };
   };

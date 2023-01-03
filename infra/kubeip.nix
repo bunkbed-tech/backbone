@@ -101,6 +101,7 @@ rec {
       template = {
         metadata.labels.app = service;
         spec = rec {
+          priority_class_name = "system-cluster-critical";
           node_selector."cloud.google.com/gke-nodepool" = web-pool;
           container = [
             (rec {
@@ -115,7 +116,7 @@ rec {
           ];
           restart_policy = "Always";
           service_account_name = resource.kubernetes_service_account.${service}.metadata.name;
-          volume = [ { inherit (volume-google) name secret; } ];
+          volume = [{ inherit (volume-google) name secret; }];
         };
       };
     };

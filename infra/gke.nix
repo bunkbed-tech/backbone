@@ -1,4 +1,4 @@
-{ project, cluster, users }:
+{ project, cluster, users, taint }:
 rec {
   resource.google_project_service.kubernetes = {
     service = "container.googleapis.com";
@@ -16,7 +16,7 @@ rec {
       {
         machine_type = "e2-micro";
         disk_size_gb = 10;
-        taint = [{ key = "dedicated"; value = "ingress"; effect = "NO_SCHEDULE"; }];
+        taint = [ taint ];
       }
     ];
   };
