@@ -1,17 +1,19 @@
 { config, lib, pkgs, ... }:
 let
-  inherit (builtins) attrNames attrValues foldl' map;
+  inherit (builtins) attrNames attrValues foldl' head map replaceStrings;
   inherit (lib.attrsets) recursiveUpdate;
   org = "bunkbed";
   project = "backbone";
   domain = "${org}.tech";
+  domain-clean = replaceStrings [ "." ] [ "-" ] domain;
   users = map (n: "${n}@${domain}") [ "tristan" "tahoe" ];
   makeIp = name: "\${ google_compute_address.${name}.address }";
   billing_account = "\${ data.google_billing_account.tristan-united.id }";
+  taint = { key = "dedicated"; value = "ingress"; effect = "NO_SCHEDULE"; };
   org_id = "\${ data.google_organization.${org}.org_id }";
-  utils = import ./utils.nix { inherit lib; };
+  utils = import ./utils.nix { inherit pkgs lib; };
   modules = rec {
-    variables = import ./variables.nix {};
+    variables = import ./variables.nix { };
     backend = import ./backend.nix { inherit org project; };
     providers = import ./providers.nix {
       inherit org project;
@@ -36,7 +38,7 @@ let
       subnetwork.region = providers.provider.google.region;
     };
     gke = import ./gke.nix {
-      inherit project users;
+      inherit project users taint;
       cluster = {
         location = providers.provider.google.zone;
         network = vpc.resource.google_compute_network.vpc.name;
@@ -56,25 +58,25 @@ let
       ips = map makeIp (attrNames kubeip.resource.google_compute_address);
       funcs = { inherit (lib.lists) concatMap; };
     };
-    webserver = import ./webserver.nix {
-      #inherit domain;
-      #webserver.tls.issuer = cert-manager.resource.kubernetes_manifest.issuer.manifest.metadata.name;
-      #static-ip-name = vpc.resource.google_compute_global_address.base.name;
-      #cert-manager.namespace = cert-manager.resource.helm_release.cert-manager.namespace;
+    webserver = import ./webserver.nix { };
+    nginx = import ./nginx.nix {
+      inherit domain taint;
+      ip = makeIp (head (attrNames kubeip.resource.google_compute_address));
+      webserver = {
+        inherit (webserver.resource.kubernetes_service.webserver.metadata) name namespace;
+        inherit (head webserver.resource.kubernetes_service.webserver.spec.port) port;
+      };
+      ingress-pool = gke.resource.google_container_node_pool.ingress-pool.name;
+      tls.secret = cert-manager.resource.kubernetes_manifest.domain-clean.manifest.spec.secretName;
+      issuer = cert-manager.resource.kubernetes_manifest.issuer.manifest.metadata.name;
+      funcs = { inherit (utils) importYaml toHCL; };
     };
-    #   nginx = import ./nginx.nix {
-    #     inherit domain;
-    #     webserver = {
-    #       inherit (webserver.resource.kubernetes_service.webserver.metadata) name namespace;
-    #     };
-    #     ingress-pool = gke.resource.google_container_node_pool.ingress-pool.name;
-    #   };
-    #   cert-manager = import ./cert-manager.nix {
-    #     inherit domain;
-    #     issuer.solvers = [
-    #       { http01.ingress.name = webserver.resource.kubernetes_ingress_v1.webserver-ingress.metadata.name; }
-    #     ];
-    #   };
+    cert-manager = import ./cert-manager.nix {
+      inherit domain domain-clean;
+      issuer.solvers = [
+        { selector = {}; http01.ingress.class = "nginx"; }
+      ];
+    };
     #   gitlab = import ./gitlab.nix { inherit domain ip; }
   };
 in
