@@ -33,30 +33,4 @@ rec {
       selector = metadata.labels;
     };
   };
-# resource.kubernetes_secret."${service}-ssl" = {
-#   metadata = { name = "${service}-ssl"; namespace = cert-manager.namespace; };
-#   type = "kubernetes.io/tls";
-#   data = { "tls.crt" = ""; "tls.key" = ""; };
-# };
-# resource.kubernetes_ingress_v1."${service}-ingress" = {
-#   metadata = {
-#     name = "${service}-ingress";
-#     annotations = {
-#       "kubernetes.io/ingress.allow-http" = true;
-#       # Link TLS Issuer
-#       "cert-manager.io/cluster-issuer" = webserver.tls.issuer;
-#       # Make GCP External LB with static IP
-#       "kubernetes.io/ingress.class" = "gce";
-#       "kubernetes.io/ingress.global-static-ip-name" = static-ip-name;
-#     };
-#   };
-#   spec = {
-#     rule = [
-#       { host = domain; http.path = [{ backend.service = { name = service; port.number = 8080; }; }]; }
-#     ];
-#     tls = [
-#       { hosts = [ domain ]; secret_name = resource.kubernetes_secret."${service}-ssl".metadata.name; }
-#     ];
-#   };
-# };
 }

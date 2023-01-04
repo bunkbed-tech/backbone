@@ -67,16 +67,16 @@ let
         inherit (head webserver.resource.kubernetes_service.webserver.spec.port) port;
       };
       ingress-pool = gke.resource.google_container_node_pool.ingress-pool.name;
-      tls.secret = cert-manager.resource.kubernetes_manifest.domain-clean.manifest.spec.secretName;
-      issuer = cert-manager.resource.kubernetes_manifest.issuer.manifest.metadata.name;
+#     tls.secret = cert-manager.resource.kubernetes_manifest.domain-clean.manifest.spec.secretName;
+#     issuer = cert-manager.resource.kubernetes_manifest.issuer.manifest.metadata.name;
       funcs = { inherit (utils) importYaml toHCL; };
     };
-    cert-manager = import ./cert-manager.nix {
-      inherit domain domain-clean;
-      issuer.solvers = [
-        { selector = {}; http01.ingress.class = "nginx"; }
-      ];
-    };
+#   cert-manager = import ./cert-manager.nix {
+#     inherit domain domain-clean;
+#     issuer.solvers = [
+#       { selector = {}; http01.ingress.class = "nginx"; }
+#     ];
+#   };
     #   gitlab = import ./gitlab.nix { inherit domain ip; }
   };
 in
