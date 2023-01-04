@@ -17,6 +17,7 @@ rec {
     name = "vpc-firewall";
     network = resource.google_compute_network.vpc.name;
     source_ranges = [ "0.0.0.0/0" ];
-    allow = [{ protocol = "tcp"; ports = [ 80 443 ]; }];
+    # ingress-nginx has a validating webhook at por 8443
+    allow = [{ protocol = "tcp"; ports = [ 80 443 8443 ]; }];
   };
 }
