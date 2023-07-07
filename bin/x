@@ -1,0 +1,29 @@
+#!\bash
+# shellcheck disable=SC2239
+
+set -o errexit
+
+usage="Usage: x
+       [-h|--help]                Display this message
+       [-- ...]                   Options will be passed to terraform
+"
+
+# No arguments is the same as specifying `--help|-h`
+[[ $# -eq 0 ]] && { echo "$usage"; exit 0; }
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --help|-h) echo "$usage"; exit 0 ;;
+        --) shift; break ;;
+        *) echo "x: ERROR: unrecognized config/option $1" 1>&2; exit 1 ;;
+    esac
+    shift
+done
+
+# Build config with terranix
+nix build "$PRJ_ROOT"
+mv "$PRJ_ROOT/result" "$PRJ_ROOT/infra.tf.json"
+
+# Run terraform
+\terraform init
+\terraform "$@"

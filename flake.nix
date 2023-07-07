@@ -1,10 +1,10 @@
 {
-  description = "bunkbed backbone infrastructure";
+  description = "Bunkbed backbone infrastructure";
   inputs = {
-    devshell.url = "github:numtide/devshell";
-    flake-utils.url = "github:numtide/flake-utils";
-    nixpkgs.url = "github:nixos/nixpkgs/release-22.11";
-    terranix.url = "github:terranix/terranix";
+    devshell.url = github:numtide/devshell;
+    flake-utils.url = github:numtide/flake-utils;
+    nixpkgs.url = github:nixos/nixpkgs;
+    terranix.url = github:terranix/terranix;
     terranix.inputs.nixpkgs.follows = "nixpkgs";
   };
   outputs =
@@ -15,52 +15,51 @@
     , terranix
     }: flake-utils.lib.eachDefaultSystem (system:
     let
-      pkgs = import nixpkgs { inherit system; overlays = [ devshell.overlay ]; };
-      inherit (builtins) toString;
-      inherit (pkgs.devshell) mkShell;
-      inherit (pkgs.lib) genAttrs;
-      inherit (pkgs.writers) writeBash;
-      inherit (terranix.lib) terranixConfiguration;
-      project = "backbone";
-      tf = rec {
-        config = terranixConfiguration { inherit system; modules = [ ./infra ]; };
-        commandToApp = command: {
-          type = "app";
-          program = toString (writeBash "${command}" ''
-            result="infra.tf.json"
-            [[ -e $result ]] && rm -f $result
-            cp ${config} $result
-            terraform init
-            terraform ${command}
-          '');
-        };
+      pkgs = import nixpkgs {
+        inherit system;
+        overlays = [
+          devshell.overlay
+          (final: prev: { lib = prev.lib // { backbone = import ./infra/lib { pkgs = final; }; }; })
+        ];
+      };
+      x = pkgs.lib.backbone.subTemplateCmds {
+        template = ./bin/x;
+        cmds.bash = "${pkgs.bash}/bin/bash";
+        cmds.terraform = "${pkgs.terraform}/bin/terraform";
       };
     in
     rec {
-      packages.tf = tf.config;
-      packages.default = packages.tf;
+      packages.default = terranix.lib.terranixConfiguration {
+        inherit system pkgs;
+        modules = [
+          ./infra/modules/traefik.nix
+          {
+            provider.kubernetes = { config_path = "/root/.kube/config"; };
+            resource.kubernetes_namespace.test = { metadata.name = "test"; };
+          }
+        ];
+      };
 
-      apps = genAttrs [ "apply" "plan" "destroy" ] tf.commandToApp;
+      apps.default = self.outputs.devShells.${system}.default.flakeApp;
 
-      devShell = mkShell {
-        name = "${project}-shell";
-        commands = [{ package = "devshell.cli"; }];
+      devShell = pkgs.devshell.mkShell ({ ... }: {
+        name = "BACKBONE";
+        commands = [ { name = "x"; command = x; } ];
         packages = with pkgs; [
-          cmctl
+          bash
           gitleaks
           go
-          # Need this extra component in order for kubectl to communicate with GKE cluster
-          # For more details, see issue at: https://github.com/NixOS/nixpkgs/issues/99280#issuecomment-1227334798
-          (google-cloud-sdk.withExtraComponents ([ google-cloud-sdk.components.gke-gcloud-auth-plugin ]))
           kubectl
           kubernetes-helm
           nixpkgs-fmt
           pre-commit
+          shellcheck
           terraform
+          terraform-docs
           terranix
           tfsec
         ];
-      };
+      });
     }
-    );
+  );
 }
