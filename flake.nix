@@ -34,8 +34,8 @@
         modules = [
           ./infra/modules/traefik.nix
           {
-            provider.kubernetes = { config_path = "/root/.kube/config"; };
-            resource.kubernetes_namespace.test = { metadata.name = "test"; };
+            provider.kubernetes = { config_path = "~/.kube/config"; };
+            provider.helm = { kubernetes.config_path = "~/.kube/config"; };
           }
         ];
       };
