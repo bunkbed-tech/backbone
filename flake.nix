@@ -33,10 +33,10 @@
         inherit system pkgs;
         modules = [
           ./infra/modules/traefik.nix
-          {
-            provider.kubernetes = { config_path = "~/.kube/config"; };
-            provider.helm = { kubernetes.config_path = "~/.kube/config"; };
-          }
+          ({ config, ... }: {
+            provider.kubernetes = { config_path = "~/.kube/config"; config_context = "sirver"; };
+            provider.helm = { inherit (config.provider) kubernetes; };
+          })
         ];
       };
 
