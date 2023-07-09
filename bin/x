@@ -22,7 +22,7 @@ done
 
 # Build config with terranix
 nix build "$PRJ_ROOT"
-mv "$PRJ_ROOT/result" "$PRJ_ROOT/infra.tf.json"
+mv -f "$PRJ_ROOT/result" "$PRJ_ROOT/infra.tf.json"
 
 # Run terraform
 \terraform init
