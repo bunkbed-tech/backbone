@@ -33,6 +33,7 @@
         inherit system pkgs;
         modules = [
           ./infra/modules/traefik.nix
+          ./infra/modules/namecheap.nix
           ({ config, ... }: {
             provider.kubernetes = { config_path = "~/.kube/config"; config_context = "sirver"; };
             provider.helm = { inherit (config.provider) kubernetes; };
