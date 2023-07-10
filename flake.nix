@@ -26,6 +26,8 @@
         template = ./bin/x;
         cmds.bash = "${pkgs.bash}/bin/bash";
         cmds.terraform = "${pkgs.terraform}/bin/terraform";
+        cmds.grep = "${pkgs.gnugrep}/bin/grep";
+        cmds.ssh = "${pkgs.openssh}/bin/ssh";
       };
     in
     rec {
@@ -49,10 +51,12 @@
         packages = with pkgs; [
           bash
           gitleaks
+          gnugrep
           go
           kubectl
           kubernetes-helm
           nixpkgs-fmt
+          openssh
           pre-commit
           shellcheck
           terraform

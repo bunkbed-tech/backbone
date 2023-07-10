@@ -3,8 +3,14 @@
 
 set -o errexit
 
+localhost="127.0.0.1"
+host="api.kube"
+port=6443
+remote="sirver"
+
 usage="Usage: x
        [-h|--help]                Display this message
+       [-r|--remote REMOTE]       SSH remote with $host:$port Kubernetes host
        [-- ...]                   Options will be passed to terraform
 "
 
@@ -14,6 +20,7 @@ usage="Usage: x
 while [[ $# -gt 0 ]]; do
     case $1 in
         --help|-h) echo "$usage"; exit 0 ;;
+        --remote|-r) remote=$2; shift ;;
         --) shift; break ;;
         *) echo "x: ERROR: unrecognized config/option $1" 1>&2; exit 1 ;;
     esac
@@ -25,5 +32,12 @@ nix build "$PRJ_ROOT"
 mv -f "$PRJ_ROOT/result" "$PRJ_ROOT/infra.tf.json"
 
 # Run terraform
-\terraform init
+\terraform init &> /dev/null
+host_map="$localhost $host"
+regex=$(sed -e 's/\./\\./g' <<< "$host_map")
+\grep -q "^$regex$" /etc/hosts || echo "$host_map" | sudo tee -a /etc/hosts &> /dev/null
+\ssh -N -L "$host:$port:$host:$port" "$remote" &
+SSH_PID=$!
+sleep 1
 \terraform "$@"
+kill -9 "$SSH_PID"
