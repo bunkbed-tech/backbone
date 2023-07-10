@@ -1,5 +1,9 @@
 { config, lib, pkgs, ... }:
-let name = "traefik";
+let
+  name = "traefik";
+  namespace = name;
+  labels.app = name;
+  services = { dashboard.port = 8080; web.port = 80; };
 in {
   resource.kubernetes_namespace.traefik = { metadata.name = name; };
   resource.kubernetes_cluster_role.traefik = {
@@ -23,52 +27,37 @@ in {
     ];
   };
   resource.kubernetes_service_account.traefik = {
-    metadata.name = name;
-    metadata.namespace = config.resource.kubernetes_namespace.traefik.metadata.name;
+    depends_on = [ "kubernetes_namespace.traefik" ];
+    metadata = { inherit name namespace; };
   };
   resource.kubernetes_cluster_role_binding.traefik = {
+    depends_on = [ "kubernetes_cluster_role.traefik" "kubernetes_service_account.traefik" ];
     metadata.name = name;
     role_ref = { api_group = "rbac.authorization.k8s.io"; kind = "ClusterRole"; name = name; };
-    subject = [
-      {
-        kind = "ServiceAccount";
-        name = name;
-        namespace = config.resource.kubernetes_namespace.traefik.metadata.name;
-      }
-    ];
+    subject = [ { inherit name namespace; kind = "ServiceAccount"; } ];
   };
-  resource.kubernetes_deployment.traefik = rec {
-    metadata.name = name;
-    metadata.namespace = config.resource.kubernetes_namespace.traefik.metadata.name;
-    metadata.labels.app = name;
+  resource.kubernetes_deployment.traefik = {
+    depends_on = [ "kubernetes_cluster_role_binding.traefik" ];
+    metadata = { inherit name namespace labels; };
     spec.replicas = 1;
-    spec.selector.match_labels = metadata.labels;
-    spec.template.metadata.labels = metadata.labels;
-    spec.template.spec.service_account_name = config.resource.kubernetes_service_account.traefik.metadata.name;
-    spec.template.spec.containers = [
+    spec.selector.match_labels = labels;
+    spec.template.metadata.labels = labels;
+    spec.template.spec.service_account_name = name;
+    spec.template.spec.container = [
       {
         name = name;
         image = "traefik:v2.10";
         args = [ "--api.insecure" "--providers.kubernetesingress" ];
-        ports = [
-          { name = "web"; container_port = 80; }
-          { name = "dashboard"; container_port = 8080; }
-        ];
+        port = lib.attrsets.mapAttrsToList (_name: service: { name = _name; container_port = service.port; }) services;
       }
     ];
   };
-  resource.kubernetes_service.traefik-dashboard = {
-    metadata.name = "${name}-dashboard";
-    metadata.namespace = config.resource.kubernetes_namespace.traefik.metadata.name;
+  resource.kubernetes_service = pkgs.lib.backbone.mkResources {} (_name: service: {
+    depends_on = [ "kubernetes_deployment.traefik" ];
+    metadata.name = "${name}-${_name}";
+    metadata.namespace = namespace;
     spec.type = "LoadBalancer";
-    spec.ports = [ { port = 8080; target_port = "dashboard"; } ];
-    spec.selector = config.resource.kubernetes_deployment.traefik.spec.selector.match_labels;
-  };
-  resource.kubernetes_service.traefik-web = {
-    metadata.name = "${name}-web";
-    metadata.namespace = config.resource.kubernetes_namespace.traefik.metadata.name;
-    spec.type = "LoadBalancer";
-    spec.ports = [ { port = 80; target_port = "web"; } ];
-    spec.selector = config.resource.kubernetes_deployment.traefik.spec.selector.match_labels;
-  };
+    spec.port = [ { port = service.port; target_port = _name; } ];
+    spec.selector = labels;
+  }) services;
 }
