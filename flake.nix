@@ -29,13 +29,13 @@
         cmds.grep = "${pkgs.gnugrep}/bin/grep";
         cmds.ssh = "${pkgs.openssh}/bin/ssh";
       };
-    in
-    rec {
+    in {
       packages.default = terranix.lib.terranixConfiguration {
         inherit system pkgs;
         modules = [
           ./infra/modules/traefik.nix
           ./infra/modules/namecheap.nix
+          ./infra/modules/forgejo.nix
           ({ config, ... }: {
             provider.kubernetes = { config_path = "~/.kube/config"; config_context = "sirver"; };
             provider.helm = { inherit (config.provider) kubernetes; };
