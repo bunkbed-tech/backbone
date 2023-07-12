@@ -39,6 +39,12 @@
           ({ config, ... }: {
             provider.kubernetes = { config_path = "~/.kube/config"; config_context = "sirver"; };
             provider.helm = { inherit (config.provider) kubernetes; };
+            resource.kubernetes_storage_class.default = {
+              metadata.name = "default";
+              metadata.annotations."storageclass.kubernetes.io/is-default-class" = true;
+              storage_provisioner = "kubernetes.io/no-provisioner";
+              volume_binding_mode = "WaitForFirstConsumer";
+            };
           })
         ];
       };

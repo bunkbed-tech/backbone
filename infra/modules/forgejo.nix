@@ -4,6 +4,7 @@ let
   namespace = name;
 in {
   resource.helm_release.forgejo = {
+    depends_on = [ "kubernetes_storage_class.default" ];
     inherit name namespace;
     create_namespace = true;
     repository = "oci://codeberg.org/forgejo-contrib";
