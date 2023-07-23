@@ -17,6 +17,12 @@ in {
         "--api.insecure"
         "--accesslog"
       ];
+      certResolvers.letsencrypt = {
+        email = "webmaster@bunkbed.tech";
+        tlsChallenge = true;
+        storage = "acme.json";
+        caServer = "https://acme-staging-v02.api.letsencrypt.org/directory";
+      };
     };
   };
         {
