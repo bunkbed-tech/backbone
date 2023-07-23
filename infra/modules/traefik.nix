@@ -17,6 +17,7 @@ in {
         "--api.insecure"
         "--accesslog"
         "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+        "--entrypoints.ssh.address=:2222/tcp"
       ];
       certResolvers.letsencrypt = {
         email = "webmaster@bunkbed.tech";
