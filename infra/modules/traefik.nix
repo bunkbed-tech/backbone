@@ -28,6 +28,10 @@ in {
       ingressRoute.dashboard.entryPoints = [ "websecure" ];
       ingressRoute.dashboard.matchRule = "Host(`traefik.bunkbed.tech`)";
       ingressRoute.dashboard.tls.certResolver = "letsencrypt";
+      ports.ssh.port = 2222;
+      ports.ssh.expose = true;
+      ports.ssh.exposedPort = 22;
+      ports.ssh.protocol = "TCP";
     };
   };
   resource.kubernetes_manifest.whoami = {

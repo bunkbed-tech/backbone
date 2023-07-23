@@ -50,6 +50,7 @@ in {
     version = "0.8.6";
     values = pkgs.lib.backbone.toYAML ({
       postgresql.enabled = false;
+      gitea.config.server.DOMAIN = "forgejo.bunkbed.tech";
       gitea.config.database = {
         DB_TYPE = "postgres";
         HOST = "${postgres}-postgresql.${namespace}.svc.cluster.local";
@@ -106,7 +107,7 @@ in {
       spec.entryPoints = [ "ssh" ];
       spec.routes = [
         {
-          match = "Host(`forgejo.bunkbed.tech`)";
+          match = "HostSNI(`*`)";
           kind = "Rule";
           services = [ { name = "forgejo-ssh"; port = 22; } ];
         }
