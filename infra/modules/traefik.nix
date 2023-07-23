@@ -16,6 +16,7 @@ in {
       additionalArguments = [
         "--api.insecure"
         "--accesslog"
+        "--entrypoints.web.http.redirections.entryPoint.to=websecure"
       ];
       certResolvers.letsencrypt = {
         email = "webmaster@bunkbed.tech";
