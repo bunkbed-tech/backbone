@@ -23,6 +23,9 @@ in {
         storage = "acme.json";
         caServer = "https://acme-staging-v02.api.letsencrypt.org/directory";
       };
+      ingressRoute.dashboard.entryPoints = [ "websecure" ];
+      ingressRoute.dashboard.matchRule = "Host(`traefik.bunkbed.tech`)";
+      ingressRoute.dashboard.tls.certResolver = "letsencrypt";
     };
   };
   resource.kubernetes_manifest.whoami = {
