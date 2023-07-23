@@ -80,4 +80,37 @@ in {
       volumePermissions.enabled = true;
     });
   };
+  resource.kubernetes_manifest.forgejo-http = {
+    manifest = {
+      kind = "IngressRoute";
+      apiVersion = "traefik.io/v1alpha1";
+      metadata.name = "forgejo-http";
+      metadata.namespace = namespace;
+      spec.entryPoints = [ "websecure" ];
+      spec.routes = [
+        {
+          match = "Host(`forgejo.bunkbed.tech`)";
+          kind = "Rule";
+          services = [ { name = "forgejo-http"; port = 3000; } ];
+        }
+      ];
+      spec.tls.certResolver = "letsencrypt";
+    };
+  };
+  resource.kubernetes_manifest.forgejo-ssh = {
+    manifest = {
+      kind = "IngressRoute";
+      apiVersion = "traefik.io/v1alpha1";
+      metadata.name = "forgejo-ssh";
+      metadata.namespace = namespace;
+      spec.entryPoints = [ "ssh" ];
+      spec.routes = [
+        {
+          match = "Host(`forgejo.bunkbed.tech`)";
+          kind = "Rule";
+          services = [ { name = "forgejo-ssh"; port = 22; } ];
+        }
+      ];
+    };
+  };
 }
