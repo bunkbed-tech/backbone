@@ -3,3 +3,5 @@
 .terraform/
 *.tf.json
 *.tfvars
+**/.DS_Store
+**/._*
