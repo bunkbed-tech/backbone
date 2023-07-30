@@ -1,8 +1,14 @@
 # backbone
 
-Bunkbed uses an on-premises server instead of cloud for our various projects in order to keep costs low and to use as many open source tools as possible. This server runs nixOS and hosts our source code, CI/CD, website, etc.
+backbone is the infrastructure behind our projects
 
-## Tools
+We choose to host the entirety of our company's efforts on an on-premises server instead of cloud not because it is easy, but because it is hard.
+
+## Details
+
+This project helps us keep as many tools totally supported by free and open source software as possible.
+
+### Tools Used
 
 - nixOS
 - Forgejo
@@ -10,7 +16,7 @@ Bunkbed uses an on-premises server instead of cloud for our various projects in 
 - Traeffik Proxy
 - And more...
 
-## Commands
+## Helpful Commands
 
 ```bash
 kubectl annotate ingress web-ingress cert-manager.io/issuer=letsencrypt-production --overwrite
