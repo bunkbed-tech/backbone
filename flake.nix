@@ -30,32 +30,28 @@
         cmds.ssh = "${pkgs.openssh}/bin/ssh";
       };
     in {
-      packages.default = terranix.lib.terranixConfiguration {
+      packages.k3d-bunkbed = terranix.lib.terranixConfiguration {
         inherit system pkgs;
         modules = [
-          ./infra/modules/traefik.nix
-          ./infra/modules/namecheap.nix
-          ./infra/modules/forgejo.nix
-          ({ config, lib, ... }: {
-            options.kubernetes.version = lib.mkOption {
-              description = "The version of kubernetes we are using in our cluster";
-              type = lib.types.str;
-            };
-            config.provider.kubernetes = {
-              config_path = "~/.kube/config";
-              config_context = "sirver-${config.kubernetes.version}";
-            };
-            config.provider.helm = { inherit (config.provider) kubernetes; };
-            config.resource.kubernetes_storage_class.default = lib.mkIf (config.kubernetes.version == "k8s") {
-              metadata.name = "default";
-              metadata.annotations."storageclass.kubernetes.io/is-default-class" = true;
-              storage_provisioner = "kubernetes.io/no-provisioner";
-              volume_binding_mode = "WaitForFirstConsumer";
-            };
-          })
-          { kubernetes.version = "k3s"; }
+          ./infra/cluster.nix
+          { kubernetes.context = "k3d-bunkbed"; }
         ];
       };
+      packages.sirver-k3s = terranix.lib.terranixConfiguration {
+        inherit system pkgs;
+        modules = [
+          ./infra/cluster.nix
+          { kubernetes.context = "sirver-k3s"; }
+        ];
+      };
+      packages.sirver-k8s = terranix.lib.terranixConfiguration {
+        inherit system pkgs;
+        modules = [
+          ./infra/cluster.nix
+          { kubernetes.context = "sirver-k3s"; }
+        ];
+      };
+      packages.default = self.packages.${system}.k3d-bunkbed;
 
       apps.default = self.outputs.devShells.${system}.default.flakeApp;
 
