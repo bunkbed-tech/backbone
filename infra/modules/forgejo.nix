@@ -7,7 +7,7 @@ let
   postgres = "${name}-postgres";
   storage = "18Gi";
 in {
-  resource.kubernetes_persistent_volume.forgejo = lib.mkIf (config.kubernetes.version == "k8s") {
+  resource.kubernetes_persistent_volume.forgejo = lib.mkIf (config.kubernetes.context == "sirver-k8s") {
     depends_on = [ "kubernetes_storage_class.default" ];
     metadata.name = name;
     spec.storage_class_name = config.resource.kubernetes_storage_class.default.metadata.name;
@@ -24,7 +24,7 @@ in {
       }
     ];
   };
-  resource.kubernetes_persistent_volume_claim.forgejo = lib.mkIf (config.kubernetes.version == "k8s") {
+  resource.kubernetes_persistent_volume_claim.forgejo = lib.mkIf (config.kubernetes.context == "sirver-k8s") {
     depends_on = [ "kubernetes_persistent_volume.forgejo" "kubernetes_namespace.forgejo" ];
     metadata = { inherit name namespace; };
     spec.access_modes = [ "ReadWriteOnce" ];
@@ -42,7 +42,7 @@ in {
   };
   resource.helm_release.forgejo = {
     depends_on = [ "helm_release.forgejo-postgres" ] ++ (
-      if (config.kubernetes.version == "k8s") then [ "kubernetes_persistent_volume_claim.forgejo" ] else []
+      if (config.kubernetes.context == "sirver-k8s") then [ "kubernetes_persistent_volume_claim.forgejo" ] else []
     );
     inherit name namespace;
     repository = "oci://codeberg.org/forgejo-contrib";
@@ -58,13 +58,13 @@ in {
         USER = user;
         PASSWD = "\${ random_password.forgejo-postgres.result }";
       };
-    } // lib.mkIf (config.kubernetes.version == "k8s") {
+    } // lib.mkIf (config.kubernetes.context == "sirver-k8s") {
       persistence.existingClaim = name;
     });
   };
   resource.helm_release.forgejo-postgres = {
     depends_on = [ "kubernetes_secret.forgejo-postgres" ] ++ (
-      if (config.kubernetes.version == "k8s") then [ "kubernetes_persistent_volume_claim.forgejo" ] else []
+      if (config.kubernetes.context == "sirver-k8s") then [ "kubernetes_persistent_volume_claim.forgejo" ] else []
     );
     name = postgres;
     namespace = namespace;
@@ -76,7 +76,7 @@ in {
       auth.username = user;
       auth.database = database;
       auth.existingSecret = postgres;
-    } // lib.mkIf (config.kubernetes.version == "k8s") {
+    } // lib.mkIf (config.kubernetes.context == "sirver-k8s") {
       primary.persistence.existingClaim = name;
       volumePermissions.enabled = true;
     });
