@@ -67,6 +67,7 @@
           gitleaks
           gnugrep
           go
+          k3d
           kubectl
           kubernetes-helm
           nixpkgs-fmt
