@@ -30,16 +30,3 @@ repos:
     entry: gitleaks protect --verbose --redact --staged
     language: golang
     pass_filenames: false
-# - repo: https://github.com/antonbabenko/pre-commit-terraform
-# rev: v1.75.0
-# hooks:
-# - id: infracost_breakdown
-#   verbose: true
-# - id: terraform_docs
-#   args:
-#   - --hook-config=--path-to-file=README.md
-#   - --hook-config=--add-to-existing-file=true
-#   - --hook-config=--create-file-if-not-exist=true
-# - id: terraform_providers_lock
-#   args: [--tf-init-args=-upgrade]
-# - id: terraform_tfsec

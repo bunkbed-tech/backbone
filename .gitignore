@@ -1,6 +1,4 @@
 .DS_Store
 .direnv/
-.terraform/
-*.tf.json
-*.tfvars
-*.tfstate*
+/run
+/config/secrets

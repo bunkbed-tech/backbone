@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2239
+
+set -o errexit
+
+contexts=("k3d-bunkbed" "sirver-k3s" "sirver-k8s")
+usage="Usage: x
+       [all]                      Run entire terraform configuration in phases
+       [-c|--context CONTEXT]     Kubernetes context to work with (options: ${contexts[*]})
+       [-- ...]                   Options will be passed to terraform
+       [-h|--help]                Display this message
+"
+
+set_context() {
+    for context in "${contexts[@]}"; do
+        [[ $context == $1 ]] && context="$1"
+    done
+    : ${context:?$1 is not a valid context}
+}
+
+show_usage() {
+    echo "$usage"
+    exit 0
+}
+
+# Parse arguments
+[[ $# -eq 0 ]] && show_usage
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --context|-c) set_context "$2"; shift ;;
+        --) shift ; break ;;
+        --help|-h) show_usage ;;
+        *) echo "x: ERROR: unrecognized config/option $1" 1>&2; exit 1 ;;
+    esac
+    shift
+done
+
+context="${context:-${contexts[0]}}"
+
+[[ $1 == all ]] && {
+    bb --context "$context" -- apply -target=helm_release.traefik -auto-approve
+    bb --context "$context" -- apply -auto-approve
+    exit 0
+}
+
+# Connect to remote server if needed
+[[ $context != k3d-bunkbed ]] && {
+    # We'll need to change this code and test when we have access to the server again
+    # host_map = 127.0.0.1 localhost (if context == sirver-k3s else if context == sirver-k8s) 127.0.0.1 api.kube
+    host="localhost"
+    port=6443
+    remote="sirver"
+    host_map="127.0.0.1 $host"
+    regex=$(sed -e 's/\./\\./g' <<< "$host_map")
+    \grep -q "^$regex$" /etc/hosts || echo "$host_map" | sudo tee -a /etc/hosts &> /dev/null
+    \ssh -N -L "$host:$port:$host:$port" "$remote" &
+    SSH_PID=$!
+    sleep 1
+    kill -9 "$SSH_PID"
+}
+
+# Build config with terranix
+nix build "$PRJ_ROOT#${context}"
+
+# Prepare run directory
+run_d="$PRJ_ROOT/run/terraform/$context"
+mkdir -p "$run_d"
+mv -f "$PRJ_ROOT/result" "$run_d/terraform.tf.json"
+cp -f "$PRJ_ROOT/config/secrets/terraform.tfvars" "$run_d/terraform.tfvars"
+
+# Run terraform
+terraform -chdir="$run_d" "$@"

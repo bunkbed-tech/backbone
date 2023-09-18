@@ -33,7 +33,7 @@ in {
   };
 
   resource.kubernetes_namespace.forgejo = { metadata.name = namespace; };
-  resource.random_password.forgejo-postgres = { length = 24; };
+  resource.random_password.forgejo-postgres = { length = 24; special = false; };
   resource.kubernetes_secret.forgejo-postgres = {
     depends_on = [ "kubernetes_namespace.forgejo" ];
     metadata.name = postgres;
@@ -82,6 +82,7 @@ in {
     });
   };
   resource.kubernetes_manifest.forgejo-http = {
+    depends_on = [ "helm_release.traefik" ];
     manifest = {
       kind = "IngressRoute";
       apiVersion = "traefik.io/v1alpha1";
@@ -96,22 +97,6 @@ in {
         }
       ];
       spec.tls.certResolver = "letsencrypt";
-    };
-  };
-  resource.kubernetes_manifest.forgejo-ssh = {
-    manifest = {
-      kind = "IngressRoute";
-      apiVersion = "traefik.io/v1alpha1";
-      metadata.name = "forgejo-ssh";
-      metadata.namespace = namespace;
-      spec.entryPoints = [ "ssh" ];
-      spec.routes = [
-        {
-          match = "HostSNI(`*`)";
-          kind = "Rule";
-          services = [ { name = "forgejo-ssh"; port = 22; } ];
-        }
-      ];
     };
   };
 }

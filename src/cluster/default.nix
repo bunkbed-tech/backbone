@@ -1,9 +1,9 @@
 { config, lib, pkgs, ... }:
 {
   imports = [
-    ./modules/traefik.nix
-    ./modules/namecheap.nix
-    ./modules/forgejo.nix
+    ./traefik.nix
+    ./namecheap.nix
+    ./forgejo.nix
   ];
   options.kubernetes.context = lib.mkOption {
     description = "The kubeconfig context to use for the kubernetes provider";

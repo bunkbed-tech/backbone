@@ -7,7 +7,8 @@ let
   mkPort = name: type: { name = name; ${type} = services.${name}.port; };
 in {
   resource.helm_release.traefik = {
-    inherit name namespace;
+    name = "traefik";
+    namespace = "traefik";
     repository = "https://traefik.github.io/charts";
     chart = "traefik";
     version = "23.1.0";
@@ -17,7 +18,6 @@ in {
         "--api.insecure"
         "--accesslog"
         "--entrypoints.web.http.redirections.entryPoint.to=websecure"
-        "--entrypoints.ssh.address=:2222/tcp"
       ];
       certResolvers.letsencrypt = {
         email = "webmaster@bunkbed.tech";
@@ -28,13 +28,10 @@ in {
       ingressRoute.dashboard.entryPoints = [ "websecure" ];
       ingressRoute.dashboard.matchRule = "Host(`traefik.bunkbed.tech`)";
       ingressRoute.dashboard.tls.certResolver = "letsencrypt";
-      ports.ssh.port = 2222;
-      ports.ssh.expose = true;
-      ports.ssh.exposedPort = 22;
-      ports.ssh.protocol = "TCP";
     };
   };
   resource.kubernetes_manifest.whoami = {
+    depends_on = [ "helm_release.traefik" ];
     manifest = {
       kind = "IngressRoute";
       apiVersion = "traefik.io/v1alpha1";
