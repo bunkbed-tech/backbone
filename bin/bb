@@ -4,11 +4,11 @@
 set -o errexit
 
 contexts=("k3d-bunkbed" "sirver-k3s" "sirver-k8s")
-usage="Usage: x
-       [all]                      Run entire terraform configuration in phases
+usage="Usage: bb
        [-c|--context CONTEXT]     Kubernetes context to work with (options: ${contexts[*]})
-       [-- ...]                   Options will be passed to terraform
        [-h|--help]                Display this message
+       [-- all]                   Run entire terraform configuration in phases
+       [-- ...]                   Options will be passed to terraform
 "
 
 set_context() {

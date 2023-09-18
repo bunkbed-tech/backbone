@@ -1,3 +1,33 @@
+# Backbone
+
+## Development
+
+Run `bb` to see what your options are:
+
+``` sh
+$ bb
+Usage: bb
+       [-c|--context CONTEXT]     Kubernetes context to work with (options: k3d-bunkbed sirver-k3s sirver-k8s)
+       [-h|--help]                Display this message
+       [-- all]                   Run entire terraform configuration in phases
+       [-- ...]                   Options will be passed to terraform
 ```
-kubectl annotate ingress web-ingress cert-manager.io/issuer=letsencrypt-production --overwrite
+
+Here are some common options:
+
+1. `bb -- init` to initialize the terraform configuration
+2. `bb -- plan` to dry run what the configuration will do
+3. `bb -- apply -auto-approve` to automatically do what the new configuration will do
+4. `bb -- state list` to see what resources are managed currently by the configuration
+5. `bb -c sirver-k3s -- all` to spin up the entire configuration from nothing on the server
+
+## Architecture
+
+```text
+bin/bb                             -- entrance script for everything, wrapper around 'terraform'
+config/secrets/terraform.tfvars    -- sensitive terraform configuration
+old/                               -- relevant old configuration in process of migration
+run/terraform/                     -- terraform runtime directory with subdirectory for each cluster
+src/cluster                        -- cluster source configuration in terranix
+src/lib                            -- custom nix utilities
 ```
