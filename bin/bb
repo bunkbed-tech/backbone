@@ -37,11 +37,6 @@ done
 
 context="${context:-${contexts[0]}}"
 
-[[ $1 == all ]] && {
-    bb --context "$context" -- apply -target=helm_release.traefik -auto-approve
-    bb --context "$context" -- apply -auto-approve
-    exit 0
-}
 # Make sure service domains resolve
 for subdomain in "whoami" "traefik" "forgejo"; do
     host_map="127.0.0.1 $subdomain.bunkbed.tech"
@@ -63,6 +58,12 @@ done
     SSH_PID=$!
     sleep 1
     kill -9 "$SSH_PID"
+
+# Run everything if '-- all' specified
+[[ $1 == all ]] && {
+    bb --context "$context" -- apply -target=helm_release.traefik -auto-approve
+    bb --context "$context" -- apply -auto-approve
+    exit 0
 }
 
 # Build config with terranix
