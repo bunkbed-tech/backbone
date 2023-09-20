@@ -42,6 +42,11 @@ context="${context:-${contexts[0]}}"
     bb --context "$context" -- apply -auto-approve
     exit 0
 }
+# Make sure service domains resolve
+for subdomain in "whoami" "traefik" "forgejo"; do
+    host_map="127.0.0.1 $subdomain.bunkbed.tech"
+    grep -q "^${host_map//\./\\.}$" /etc/hosts || echo "$host_map" | sudo tee -a /etc/hosts &> /dev/null
+done
 
 # Connect to remote server if needed
 [[ $context != k3d-bunkbed ]] && {
