@@ -14,12 +14,16 @@
     let
       overlay = (final: prev: { lib = prev.lib // { backbone = import ./src/lib { pkgs = final; }; }; });
       pkgs = import nixpkgs { inherit system; overlays = [ overlay ]; };
-      mk-cluster-terranix = cluster: terranix.lib.terranixConfiguration {
+      mk-cluster-terranix = cluster: module: terranix.lib.terranixConfiguration {
         inherit system pkgs;
-        modules = [ ./src/cluster ({ kubernetes.context = cluster; }) ];
+        modules = [ ./src/cluster ({ kubernetes.context = cluster; }) module ];
       };
     in {
-      packages = pkgs.lib.attrsets.genAttrs [ "k3d-bunkbed" "sirver-k3s" "sirver-k8s" ] mk-cluster-terranix;
+      packages = builtins.mapAttrs mk-cluster-terranix {
+        k3d-bunkbed = ./src/k3d.nix;
+        sirver-k3s = {};
+        sirver-k8s = {};
+      };
       devShell = pkgs.mkShell {
         packages = with pkgs; [
           bash
