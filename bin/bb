@@ -43,24 +43,25 @@ for subdomain in "whoami" "traefik" "forgejo"; do
     grep -q "^${host_map//\./\\.}$" /etc/hosts || echo "$host_map" | sudo tee -a /etc/hosts &> /dev/null
 done
 
-# Connect to remote server if needed
+# Set up ssh connection if cluster is remote
 [[ $context != k3d-bunkbed ]] && {
-    # We'll need to change this code and test when we have access to the server again
-    # host_map = 127.0.0.1 localhost (if context == sirver-k3s else if context == sirver-k8s) 127.0.0.1 api.kube
-    host="localhost"
+    # Make sure kubernetes domain resolves
+    [[ $context == sirver-k8s ]] && {
+        host="api.kube"
+        host_map="127.0.0.1 $host"
+        grep -q "^${host_map//\./\\.}$" /etc/hosts || echo "$host_map" | sudo tee -a /etc/hosts &> /dev/null
+
+    }
+    host="${host:-localhost}"
     port=6443
-    remote="sirver"
-    host_map="127.0.0.1 $host"
-    regex="${host_map//\./\\./g}"
-    # regex=$(sed -e 's/\./\\./g' <<< "$host_map")
-    \grep -q "^$regex$" /etc/hosts || echo "$host_map" | sudo tee -a /etc/hosts &> /dev/null
-    \ssh -N -L "$host:$port:$host:$port" "$remote" &
-    SSH_PID=$!
+    ssh -N -L "$host:$port:$host:$port" sirver &
+    ssh_pid=$!
     sleep 1
-    kill -9 "$SSH_PID"
+}
 
 # Run everything if '-- all' specified
 [[ $1 == all ]] && {
+    [[ -v ssh_pid ]] && kill -9 ssh_pid
     bb --context "$context" -- init
     bb --context "$context" -- apply -target=helm_release.traefik -auto-approve
     bb --context "$context" -- apply -auto-approve
