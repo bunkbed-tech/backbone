@@ -12,8 +12,8 @@ usage="Usage: bb
 "
 
 set_context() {
-    for context in "${contexts[@]}"; do
-        [[ $context == "$1" ]] && context="$1"
+    for _context in "${contexts[@]}"; do
+        [[ $_context == "$1" ]] && context="$1"
     done
     : "${context:?$1 is not a valid context}"
 }
