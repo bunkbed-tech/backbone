@@ -61,6 +61,7 @@ done
 
 # Run everything if '-- all' specified
 [[ $1 == all ]] && {
+    bb --context "$context" -- init
     bb --context "$context" -- apply -target=helm_release.traefik -auto-approve
     bb --context "$context" -- apply -auto-approve
     exit 0
