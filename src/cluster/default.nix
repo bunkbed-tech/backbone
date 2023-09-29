@@ -4,6 +4,7 @@
     ./traefik.nix
     ./namecheap.nix
     ./forgejo.nix
+    ./immich.nix
   ];
   options.kubernetes.context = lib.mkOption {
     description = "The kubeconfig context to use for the kubernetes provider";
