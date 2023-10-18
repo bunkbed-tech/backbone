@@ -31,3 +31,17 @@ run/terraform/                     -- terraform runtime directory with subdirect
 src/cluster                        -- cluster source configuration in terranix
 src/lib                            -- custom nix utilities
 ```
+
+### Deploy local VM with SSH to test Ansible
+
+```sh
+docker run -d -p 2222:2222 \
+    -e PUBLIC_KEY_FILE=/github.pub \
+    -e USER_NAME=bunkbed \
+    -e USER_PASSWORD=bunkbed \
+    -e SUDO_ACCESS=true \
+    -e PASSWORD_ACCESS=false \
+    -v ~/.ssh/github.pub:/github.pub \
+    linuxserver/openssh-server
+ssh -i ~/.ssh/github bunkbed@127.0.0.1
+```

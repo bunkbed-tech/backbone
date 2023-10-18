@@ -1,0 +1,15 @@
+---
+- name: Deploy Home-Manager on NixOS
+  hosts: nixos
+  tasks:
+    - name: Copy Home-Manager Configuration
+      copy:
+        src: home-manager
+        dest: home-manager
+      notify: Reload Home-Manager
+    - name: Switch Home-Manager Configuration
+      command: home-manager switch --flake home-manager
+      notify: Reload Home-Manager
+  handlers:
+    - name: Reload Home-Manager
+      command: home-manager switch --flake home-manager

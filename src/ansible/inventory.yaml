@@ -1,0 +1,49 @@
+tristan:
+  hosts:
+    dell_nixos:
+      ansible_user: bunkbed
+      ansible_host: dell_nixos.network.bunkbed.tech
+all:
+  vars:
+    ansible_user: bunkbed
+  hosts:
+    dell_nixos:
+      ansible_host: dell_nixos.network.bunkbed.tech
+    pi_fedora:
+      ansible_host: pi_fedora.network.bunkbed.tech
+    pi_ubuntu:
+      ansible_host: pi_ubuntu.network.bunkbed.tech
+    turing_fedora:
+      ansible_host: turing_fedora.network.bunkbed.tech
+    turing_ubuntu:
+      ansible_host: turing_ubuntu.network.bunkbed.tech
+
+tristan:
+  children:
+    dell_nixos:
+
+tahoe:
+  children:
+    pi_fedora:
+    pi_ubuntu:
+    turing_fedora:
+    turing_ubuntu:
+
+nixos:
+  children:
+    dell_nixos:
+
+fedora:
+  children:
+    pi_fedora:
+    turing_fedora:
+
+ubuntu:
+  children:
+    pi_ubuntu:
+    turing_ubuntu:
+
+all:
+  children:
+    tristan:
+    tahoe:

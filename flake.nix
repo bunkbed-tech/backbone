@@ -26,6 +26,7 @@
       };
       devShell = pkgs.mkShell {
         packages = with pkgs; [
+          ansible
           bash
           gitleaks
           gnugrep
