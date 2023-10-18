@@ -37,6 +37,7 @@
           pre-commit
           shellcheck
           terraform
+          tektoncd-cli
         ];
         shellHook = ''
           export PRJ_ROOT="$(git rev-parse --show-toplevel)"

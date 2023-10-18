@@ -38,7 +38,7 @@ done
 context="${context:-${contexts[0]}}"
 
 # Make sure service domains resolve
-for subdomain in "whoami" "traefik" "forgejo" "immich" "jellyfin"; do
+for subdomain in "whoami" "traefik" "forgejo" "immich" "jellyfin" "tekton"; do
     host_map="127.0.0.1 $subdomain.bunkbed.tech"
     grep -q "^${host_map//\./\\.}$" /etc/hosts || echo "$host_map" | sudo tee -a /etc/hosts &> /dev/null
 done
